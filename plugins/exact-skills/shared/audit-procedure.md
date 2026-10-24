@@ -38,32 +38,58 @@ Before judging anything, build a short map in your working notes (not in `TODO_F
 
 - Consumers outside `FOLDER` (search the repo). Anything consumed outside `FOLDER` is a public API.
 - Load: where each entry point runs. Admin code runs for one user at a time, frontend code on every visitor page view, background code in cron or WP-CLI.
+- Server contracts as a table: each endpoint or action, the files that call it, and the handler's `path:line`.
+
+Then write a **project brief** of a few bullets: the project rules that matter for review, the build facts from the Project files, and the Tools result. Sub-agents get the brief and the map so they don't have to rediscover them.
 
 ## 3. Review
 
-If the in-scope source is at most 25 files and 4,000 lines, review it yourself against the Criteria file. Otherwise split it by subfolder into slices about that size, keeping tightly coupled files together, and dispatch one sub-agent per slice (Claude Code: `general-purpose`), at most 8 in parallel, with the Sub-agent brief below. If your agent can't run sub-agents, review the slices one at a time yourself. After the slices return, review the profile's Cross-slice concerns yourself.
+If the in-scope source is at most 25 files and 4,000 lines, review it yourself against the Criteria file. Otherwise split it by subfolder into slices of about 2,000 lines, keeping tightly coupled files together and giving slices that call many server handlers fewer lines, and dispatch one sub-agent per slice (Claude Code: `general-purpose`), at most 10 in parallel, with the Sub-agent brief below. If your agent can't run sub-agents, review the slices one at a time yourself. While the slices run, review the profile's Cross-slice concerns yourself.
 
 ## 4. Verify and consolidate
 
-1. Re-read the code for every Critical and High finding and every Medium-confidence finding from sub-agents. Drop what doesn't hold. With more than 15 findings to check and sub-agents available, hand the re-check to them in batches, giving each the findings and the Criteria file path.
+1. Re-check each slice as soon as it returns; don't wait for the others. Re-read the code for its Critical and High findings and its Medium-confidence findings, and drop what doesn't hold. With more than 5 to check and sub-agents available, hand them to one verifier sub-agent for that slice, giving it the findings, the project brief and the absolute Criteria file path. Re-check your own Critical and High cross-slice findings the same way.
 2. Merge duplicates. Combine findings only when one change fixes them all; never bundle unrelated issues.
-3. Sort by Severity, then Category.
+3. Group by Category in the Criteria file's Category order, and sort by Severity (Critical, High, Medium, Low) within each group.
 
 ## 5. Write `TODO_FILE`
 
-If the file exists, read it first: continue the ID sequence from the highest existing ID, skip findings already recorded, and leave existing rows untouched. If its table has different columns, add a new section headed with today's date below it, holding a table in the layout here. Otherwise create the file with a heading that names `FOLDER` and today's date.
+Layout:
 
-| ID | Severity | Category | File | Confidence | Status | Instructions |
-|----|----------|----------|------|------------|--------|--------------|
+```markdown
+# <FOLDER> audit — <today's date>
 
-- **ID**: `TASK-001`, `TASK-002`, and so on.
+**Done: <done> / <total>**
+
+| Category | Done | Critical | High | Medium | Low |
+|----------|------|----------|------|--------|-----|
+| <Category> | <done> / <count> | <n> | <n> | <n> | <n> |
+
+## <Category>
+
+Done: <done> / <count>
+
+| ID | Severity | File | Confidence | Status | Instructions |
+|----|----------|------|------------|--------|--------------|
+```
+
+- **Sections**: one `## <Category>` section per category that has tasks, in the Criteria file's Category order; skip empty categories. The summary table has one row per section, in the same order.
+- **Counters**: `done` counts rows whose Status is `Done`. Keep the counter on its own line under the heading, never in the heading, so section links stay stable.
+- **ID**: `TASK-001`, `TASK-002`, and so on, numbered across the whole file in section order.
 - **File**: `path:line`, comma-separated when there are several.
-- **Status**: always `Pending`.
+- **Status**: `Pending` for every new task.
 - **Instructions**: a single line with `|` escaped as `\|`. Say what is wrong, why it matters (the failure scenario), what to change, what must not change, and how to verify it, specifically enough that someone can implement it without auditing again. The profile's Example shows the level of detail.
 
 Bad:
 
 > Improve performance of this class.
+
+If the file exists, read it first.
+
+- **Same layout**: put each new task in its category's section (add the section in Category order if it's missing), continue the IDs from the highest existing ID, skip findings already recorded, and leave existing rows untouched. Then recalculate every counter and the summary table from the Status column.
+- **Other layout**: leave it untouched and add a new part below it in this layout, with `## <today's date>` above its counters and `###` category headings.
+
+Otherwise create the file.
 
 ## 6. Finish
 
@@ -78,7 +104,7 @@ Fill this in for each slice:
 > You are auditing part of a codebase. **Read-only: don't create, edit or delete any file, and don't run fixers or installs.**
 > Load ponytail at level `full` (Claude Code: the `ponytail:ponytail` skill with args `full`) and use its ladder for every Fix; this brief wins on scope and output format.
 > Read `<absolute Criteria file path>` and apply its Review areas, What not to flag and Finding contract.
-> Project rules to apply: <paths to CLAUDE.md and the .claude/rules files>.
-> Context map: <the map items for your files, including their load>.
+> Project brief: <the project brief>. Don't re-read project config or rule files; read source and handler files as needed.
+> Context map: <the map items for your files, including their load and the server-contract rows with handler `path:line`>.
 > Your files: <list>. Read any other file for context, but report findings only for your files and for <the profile's Extra scope, as it applies to your files>.
 > Return only a markdown table with the columns `Severity | Category | File | Confidence | Instructions`, following the Finding contract, and one line listing the areas with no findings. An empty table is a valid answer.
