@@ -7,6 +7,9 @@ A Claude Code plugin marketplace with code-review skills for WordPress plugin de
 | Skill | Command | What it does |
 |-------|---------|--------------|
 | Exact Review JS | `/exact-skills:exact-review-js <folder> <todo-file>` | Read-only audit of the JS/JSX/TS/TSX code in one folder. Records verified findings as Pending tasks in a TODO file. |
+| Exact Review PHP | `/exact-skills:exact-review-php <folder> <todo-file>` | Read-only audit of the WordPress PHP code in one folder. Records verified findings as Pending tasks in a TODO file. |
+
+Both skills follow the same steps from `plugins/exact-skills/shared/audit-procedure.md`; each skill keeps its own review criteria.
 
 ## Install
 
