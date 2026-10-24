@@ -18,15 +18,22 @@ Read `../../shared/audit-procedure.md` (relative to this skill's folder) and fol
 - **Source**: `.php`, including templates and views.
 - **Exclusions**: `node_modules`, build output, language files, and `index.php` files that only hold a "Silence is golden" comment.
 - **Project files**: `composer.json`, the main plugin file header, the PHPCS, PHPStan and PHPUnit configs, to learn the minimum PHP version ("Requires PHP" or `require.php`), the minimum WordPress version ("Requires at least"), the text domain, the autoloading, the PHP test setup (WordPress test suite, Brain Monkey or WP_Mock), and the lint and static-analysis commands.
-- **Extra prep**: if a `wp-core-reference` skill is available, load it and use it to confirm core functions, hooks and deprecations before flagging them.
+- **Extra prep**: if a `wp-core-reference` skill is available, load it and use it to confirm core functions, hooks and deprecations before flagging them. Note the plugin's "Requires at least" and keep the matching WordPress core source or stubs at hand for `@since` checks.
 - **Tools**: the project's PHPCS and PHPStan commands.
 - **Map**:
   - Entry points: hooks registered (`add_action`, `add_filter`), REST routes, AJAX actions (note every `wp_ajax_nopriv_*`), `admin_post_*` handlers, admin pages, shortcodes, blocks, cron events, WP-CLI commands, activation, deactivation and uninstall.
   - Class and file graph: autoloading, shared services and helpers.
   - Data: options, post and user meta, custom tables and transients the code reads or writes.
   - Public API: hooks the code fires (`do_action`, `apply_filters`), public functions and classes other plugins or add-ons can call.
+  - Field contracts: REST response fields and the meta, options and columns read, with their writer and their consumers (JS in `src/`, add-on repos).
+  - Invariants: rules enforced at one entry point, with their siblings.
 - **Extra scope**: none.
-- **Cross-slice**: duplication across classes, architecture, dependency direction, hooks registered twice, and the same data written from several places.
+- **Cross-slice**: duplication across classes, architecture, dependency direction, hooks registered twice, the same data written from several places, rules enforced at one entry point but missing at siblings, data written in one class and read in another with a different shape or meaning, and stored values compared with raw input.
+- **Lenses**:
+  1. Data round trip: the hostile-value trace from the criteria, through every write path.
+  2. Contract: response fields, meta, options and columns with their writers and consumers, including JS and add-ons.
+  3. State machine and jobs: status transitions, early returns, retries and races.
+  4. Lifecycle and per-request cost: activation, upgrade, uninstall, multisite, route registration, constructors and assets.
 - **Example**:
 
   > `includes/class-stats.php:112` (`Stats::get_by_ad`) builds `WHERE ad_id IN (...)` by imploding `$_GET['ids']` into the SQL, so a request with `ids=1) OR 1=1 --` returns every row. Cast the IDs with `array_map( 'absint', ... )`, build `%d` placeholders with `array_fill`, and pass them through `$wpdb->prepare()`. Keep the result shape unchanged. Verify with a test that sends a non-numeric ID and asserts only valid rows come back.

@@ -1,6 +1,6 @@
 # Audit procedure
 
-Shared by the exact-review skills. The calling skill gives you a **profile**: Arguments, Criteria, Source, Exclusions, Project files, Tools, Map, Extra scope, Cross-slice and Example, plus Extra prep when it has one. Wherever this procedure names a profile field, use the calling skill's value.
+Shared by the exact-review skills. The calling skill gives you a **profile**: Arguments, Criteria, Source, Exclusions, Project files, Tools, Map, Extra scope, Cross-slice, Lenses and Example, plus Extra prep when it has one. Wherever this procedure names a profile field, use the calling skill's value.
 
 ## Prerequisite: ponytail
 
@@ -30,7 +30,8 @@ If either is missing, ask for it before doing anything else; suggest `TODO-<fold
 5. Read the Project files to learn what the profile lists for them.
 6. If the profile has Extra prep, do it.
 7. List the Source files in `FOLDER`. Exclude the profile's Exclusions, vendored or third-party code (`vendor/`, `packages/`) and generated files. Note the excluded paths for the final summary. Test files are read to judge coverage, not reviewed for style.
-8. Run the profile's Tools on `FOLDER` without fixing. First find the supported command (the project's script, and whether it accepts a path; if not, run it on the project and keep only results for `FOLDER`). Use the output as evidence; group it by rule instead of turning each warning into a row. If a tool doesn't exist or fails (for example, dependencies aren't installed), record it as "not run" or "failed" with the reason, never as clean, and continue the review.
+8. Find earlier audit files that cover `FOLDER` (`TODO*.md`, `*audit*.md`, review notes that mention `FOLDER` paths), other than `TODO_FILE`. Keep their rows as candidates and re-check each one in §4 like any other finding. Never copy a row without re-checking it.
+9. Run the profile's Tools on `FOLDER` without fixing. First find the supported command (the project's script, and whether it accepts a path; if not, run it on the project and keep only results for `FOLDER`). Use the output as evidence; group it by rule instead of turning each warning into a row. If a tool doesn't exist or fails (for example, dependencies aren't installed), record it as "not run" or "failed" with the reason, never as clean, and continue the review.
 
 ## 2. Map
 
@@ -39,16 +40,27 @@ Before judging anything, build a short map in your working notes (not in `TODO_F
 - Consumers outside `FOLDER` (search the repo). Anything consumed outside `FOLDER` is a public API.
 - Load: where each entry point runs. Admin code runs for one user at a time, frontend code on every visitor page view, background code in cron or WP-CLI.
 - Server contracts as a table: each endpoint or action, the files that call it, and the handler's `path:line`.
+- Field contracts: for each entry point that returns data, the fields it returns, their writer and their consumers.
+- Invariants: rules enforced at one entry point (read-only states, ownership, status locks) and the sibling entry points that should enforce them too.
 
 Then write a **project brief** of a few bullets: the project rules that matter for review, the build facts from the Project files, and the Tools result. Sub-agents get the brief and the map so they don't have to rediscover them.
 
 ## 3. Review
 
-If the in-scope source is at most 25 files and 4,000 lines, review it yourself against the Criteria file. Otherwise split it by subfolder into slices of about 2,000 lines, keeping tightly coupled files together and giving slices that call many server handlers fewer lines, and dispatch one sub-agent per slice (Claude Code: `general-purpose`), at most 10 in parallel, with the Sub-agent brief below. If your agent can't run sub-agents, review the slices one at a time yourself. While the slices run, review the profile's Cross-slice concerns yourself.
+If the in-scope source is at most 25 files and 4,000 lines, review it yourself against the Criteria file, then apply each profile Lens yourself. Otherwise split it by subfolder into slices of at most 15 files and about 2,000 lines, keeping tightly coupled files together and giving slices that call many server handlers fewer lines. A file over 800 lines gets its own slice, or shares one only with its direct collaborators.
+
+Dispatch, in parallel and with at most 10 sub-agents in total (Claude Code: `general-purpose`):
+
+- one sub-agent per slice, with the Slice brief below;
+- one sub-agent per profile Lens, across the whole `FOLDER`, with the Lens brief below.
+
+When slices and lenses exceed 10, merge the smallest slices first. If your agent can't run sub-agents, review the slices, then the lenses, one at a time yourself.
+
+While they run, review the profile's Cross-slice concerns yourself, and check that every invariant in the map is enforced at all its siblings.
 
 ## 4. Verify and consolidate
 
-1. Re-check each slice as soon as it returns; don't wait for the others. Re-read the code for its Critical and High findings and its Medium-confidence findings, and drop what doesn't hold. With more than 5 to check and sub-agents available, hand them to one verifier sub-agent for that slice, giving it the findings, the project brief and the absolute Criteria file path. Re-check your own Critical and High cross-slice findings the same way.
+1. Re-check each slice and lens as soon as it returns; don't wait for the others. Re-read the code for its Critical and High findings and its Medium-confidence findings, and drop what doesn't hold. Re-check every prior-audit candidate the same way. For every finding, also run the Fix check from the Finding contract and adjust severity in context. With more than 5 to check and sub-agents available, hand them to one verifier sub-agent for that batch, giving it the findings, the project brief and the absolute Criteria file path. Re-check your own cross-slice findings the same way. Keep refuted prior-audit candidates, with the reason, for the final summary.
 2. Merge duplicates. Combine findings only when one change fixes them all; never bundle unrelated issues.
 3. Group by Category in the Criteria file's Category order, and sort by Severity (Critical, High, Medium, Low) within each group.
 
@@ -94,10 +106,10 @@ Otherwise create the file.
 ## 6. Finish
 
 1. Run `git status --porcelain --ignored` and compare it with the baseline. Only `TODO_FILE` may differ. If anything else changed, report it; don't try to repair it.
-2. Reply with the `TODO_FILE` path, counts by severity, areas reviewed with no findings, excluded paths, assumptions made and the Tools summary. If the folder has security-sensitive code, suggest running `/claude-security` on `FOLDER` for deeper analysis.
+2. Reply with the `TODO_FILE` path, counts by severity, areas reviewed with no findings, excluded paths, assumptions made, the Tools summary, prior-audit candidates confirmed, corrected and refuted (with reasons), and the coverage gaps the sub-agents reported. If the folder has security-sensitive code, suggest running `/claude-security` on `FOLDER` for deeper analysis.
 3. Stop. Don't implement anything.
 
-## Sub-agent brief
+## Slice brief
 
 Fill this in for each slice:
 
@@ -105,6 +117,19 @@ Fill this in for each slice:
 > Load ponytail at level `full` (Claude Code: the `ponytail:ponytail` skill with args `full`) and use its ladder for every Fix; this brief wins on scope and output format.
 > Read `<absolute Criteria file path>` and apply its Review areas, What not to flag and Finding contract.
 > Project brief: <the project brief>. Don't re-read project config or rule files; read source and handler files as needed.
-> Context map: <the map items for your files, including their load and the server-contract rows with handler `path:line`>.
-> Your files: <list>. Read any other file for context, but report findings only for your files, for <the profile's Extra scope, as it applies to your files>, and for build, dependency, lint, test or asset-registration files that are the root cause of a verified issue in your files.
-> Return only a markdown table with the columns `Severity | Category | File | Confidence | Instructions`, following the Finding contract, and one line listing the areas with no findings. An empty table is a valid answer.
+> Context map: <the map items for your files, including their load, the server-contract rows with handler `path:line`, the field contracts and the invariants>.
+> Your files: <list>. Report findings only for your files, for <the profile's Extra scope, as it applies to your files>, and for build, dependency, lint, test or asset-registration files that are the root cause of a verified issue in your files.
+> Any priorities given here set the order you work in, not what you check: after them, apply every Review area to every file.
+> Follow callers and consumers outside your files (other folders, client code, add-ons) when the defect is in your files; report it at its location in your files.
+> Return a markdown table with the columns `Severity | Category | File | Confidence | Instructions`, following the Finding contract, including its Fix check. Then return a coverage list: each file with the public methods or exports you read, and each Review area marked `checked` or `not checked (why)`. An empty table is a valid answer; an empty coverage list is not.
+
+## Lens brief
+
+Fill this in for each profile Lens:
+
+> You are auditing one concern across a whole folder. **Read-only: don't create, edit or delete any file, and don't run fixers or installs.**
+> Load ponytail at level `full` (Claude Code: the `ponytail:ponytail` skill with args `full`) and use its ladder for every Fix; this brief wins on scope and output format.
+> Read `<absolute Criteria file path>` and apply its What not to flag and Finding contract.
+> Project brief: <the project brief>. Context map: <the whole map>.
+> Your lens: <the Lens and what it checks>. Apply it to every file in `<FOLDER>`, following the code anywhere it leads. Report findings at their location in `<FOLDER>`, for <the profile's Extra scope>, or in a root-cause config file.
+> Return a markdown table with the columns `Severity | Category | File | Confidence | Instructions`, following the Finding contract, including its Fix check. Then return a coverage list: the entry points or write paths you traced, and those you didn't (why). An empty table is a valid answer; an empty coverage list is not.

@@ -26,6 +26,10 @@ Read `../../shared/audit-procedure.md` (relative to this skill's folder) and fol
   - Server contracts: every REST/AJAX call, its endpoint, and the PHP handler that serves it.
 - **Extra scope**: the PHP handlers of REST/AJAX calls made from in-scope files.
 - **Cross-slice**: duplication across modules, architecture, dependency direction and bundle composition.
+- **Lenses**:
+  1. Server contract: every request's payload and every response field the code reads, against the PHP handler and its args schema, including error responses returned with HTTP 200.
+  2. Async and state: out-of-order responses, double submits, updates after unmount, swallowed rejections, and UI left inconsistent after a failure.
+  3. Load and bundle: which entry loads on which screen or visitor page, its declared dependencies and globals, and what each bundle pulls in.
 - **Example**:
 
   > `UserTable.jsx:42` (`UserTable`) refetches on every filter-field change because the effect depends on the whole `filters` object, so changing three fields sends three requests and an older response can overwrite a newer one. Trigger the request from the filter-submit handler instead. Keep the request parameters and initial-load behavior unchanged. Verify with tests for initial load, submit, reset and API failure.

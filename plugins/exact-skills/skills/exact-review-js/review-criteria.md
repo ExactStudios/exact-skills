@@ -79,4 +79,6 @@ Every finding has:
   - Low: minor improvement, test gap on low-risk code, optional optimization.
 - **Confidence**: High (the failure follows directly from the code) or Medium (the code is verified, but the impact depends on runtime conditions you can't confirm). Drop anything lower.
 - **Fix**: the smallest change that resolves it, chosen with the ponytail ladder: does it need to exist → already in the codebase → platform or `@wordpress/*` → installed dependency → one line → minimum code. Keep behavior and public APIs unless the behavior itself is the bug; if a breaking change is unavoidable, list the affected consumers. State impact in words unless you measured it.
+- **Fix check**: the fix works in the project's supported browsers and WordPress version, for every caller and consumer (other screens, add-ons using a public global or filter), and against the server's real response shape. A fix that needs a server change names it.
+- **Severity in context**: if another open path already allows the same thing, lower the severity and say why. If nothing reaches the path today, call it hardening.
 - **Category**: one of Security, Correctness, React, WordPress, Performance, Resources, Accessibility, Maintenance, Dependencies, Testing.

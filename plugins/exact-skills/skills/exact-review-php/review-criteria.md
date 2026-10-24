@@ -17,6 +17,8 @@ Check what applies; skip what doesn't.
 - Files: path traversal in includes and file operations; uploads that skip `wp_handle_upload` or `wp_check_filetype_and_ext`.
 - Direct access: PHP files that run code on load without an `ABSPATH` check.
 - Secrets or private data returned by REST or AJAX, or localized to the page.
+- Keys: a key derived from a constant (`AUTH_KEY`, `*_SALT`) that may be undefined (a fatal on PHP 8), still core's sample phrase (a public key), or rotated (every stored ciphertext unreadable). Check the fallback and what happens to stored ciphertext.
+- REST args of `type: object` or `array` with no `properties` or `items`: core validates only what is listed, so any JSON reaches storage.
 
 **Correctness and reliability**
 - `WP_Error` results never checked with `is_wp_error`; remote responses whose status code is never checked.
@@ -24,8 +26,22 @@ Check what applies; skip what doesn't.
 - Type errors against `strict_types` or declared types; `false` or `null` from `get_option`, `get_post` or `get_post_meta` used as an array or object.
 - `switch_to_blog` without `restore_current_blog`; options or tables that ignore multisite where the plugin supports it.
 - `time()` or `date()` where site time matters, instead of `current_time`, `wp_date` or `current_datetime`.
-- Activation, deactivation and uninstall: schema created with `dbDelta`, cron events unscheduled, stored data removed on uninstall.
+- Activation, deactivation and uninstall: schema created with `dbDelta`, cron events unscheduled, stored data removed on uninstall. Without an `uninstall.php`, core includes the main plugin file and boots every integration to uninstall; `register_uninstall_hook()` called on every request reads a non-autoloaded option.
+- Multisite: user meta is network-wide, so per-site data or a per-site uninstall that writes user meta leaks across sites.
+- Version: check `@since` for every core function and hook used against "Requires at least", and for hooks also where core fires them in that version; a hook can gain a call site later than its `@since`.
+- Races: check-then-act on a status transition (read the status, then update and notify). Say whether the runner (Action Scheduler concurrency, parallel WP-CLI) makes it reachable.
 - Translations: missing or wrong text domain, variables inside translated strings, `sprintf` placeholders without a `translators:` comment, plurals without `_n`.
+
+**Round trip and contract**
+- Round trip: for every write path (REST, form, AJAX, CLI), trace these values from the request through the core write to storage, the read-back and the output or network call: `\`, `&`, `<3`, `'`, `"`, an upper-case email, a string longer than its column, and an array where a string is expected. Check what core does on the way:
+  - `wp_insert_post`, `update_metadata`, `wp_insert_comment`, `wp_insert_term` and `wp_insert_user` unslash their input, so callers must `wp_slash`; REST values arrive unslashed.
+  - kses on `content_save_pre`, `title_save_pre` and `pre_comment_content` runs for users without `unfiltered_html`, including user 0 in cron and signed-out visitors. `wp_filter_kses` on `pre_user_email`, `pre_comment_author_email`, `pre_term_name` and the user name fields runs for everyone (core's default filters).
+  - `sanitize_text_field` encoding `<`; passwords, which core hashes and checks slashed; column length and case-insensitive collation; a stored value later compared strictly with the raw input.
+- Contract: for every field a REST route returns and every meta, option or column the code reads, name its writer and its consumers (JS, add-ons). Flag fields that are hard-coded (`'issues' => []`), read but never written, written but never read, and response changes a client reducer would drop.
+- Early returns: for every multi-step write, list what is already written, logged, notified or scheduled at each early return. Flag a result ignored before the next step, writes ordered so a failure leaves partial state, and an audit or activity entry only some paths reach.
+- Invariants: when one entry point enforces a rule (read-only state, ownership, status lock), check every sibling write route and data method for the same rule.
+- Defaults: stored settings or preferences merged with a shallow `array_replace` or `wp_parse_args` over a nested array lose defaults added in later versions; `array_replace_recursive` merges lists by index.
+- Errors: a failure reported as a different, misleading error, such as a failed insert answered with "already exists".
 
 **Performance and resources**
 - Queries or remote calls inside loops; meta read per item where the meta cache could be primed once.
@@ -37,6 +53,8 @@ Check what applies; skip what doesn't.
 - Assets enqueued on every page instead of where they are used.
 - Cron scheduled without a `wp_next_scheduled` check; long tasks run inside a page request.
 - Memory: whole tables or all posts loaded into arrays; static caches that only grow during cron or WP-CLI runs.
+- Work at route registration: `rest_api_init` runs on every REST request, including other plugins' routes, so `enum` lists built from globs or large lists (`get_available_languages()`, `timezone_identifiers_list()`) cost on every call. Also check constructors of classes loaded on every request, and assets registered on front-end requests.
+- Remote calls in a response path whose failure isn't cached, such as `wp_get_available_translations()`.
 
 **WordPress integration**
 - A core API exists but is reimplemented: Settings API, Options, Transients, HTTP API, Filesystem, `wp_parse_args`, `wp_list_pluck` and so on.
@@ -85,4 +103,6 @@ Every finding has:
   - Low: minor improvement, test gap on low-risk code, optional optimization.
 - **Confidence**: High (the failure follows directly from the code) or Medium (the code is verified, but the impact depends on runtime conditions you can't confirm). Drop anything lower.
 - **Fix**: the smallest change that resolves it, chosen with the ponytail ladder: does it need to exist → already in the codebase → PHP or WordPress core → installed dependency → one line → minimum code. Keep behavior and public APIs, including fired hooks, unless the behavior itself is the bug; if a breaking change is unavoidable, list the affected consumers. State impact in words unless you measured it.
+- **Fix check**: the fix works on the minimum WordPress and PHP versions, for every caller, and for every consumer of a changed response (JS reducers, add-ons). A fix that changes a response shape names the client change it needs.
+- **Severity in context**: if core or another open path already allows the same thing (for example, core's `profile.php` changes the email without a password), lower the severity and say why. If nothing reaches the path today, call it hardening.
 - **Category**: one of Security, Correctness, WordPress, PHP, Performance, Resources, Maintenance, Dependencies, Testing.
