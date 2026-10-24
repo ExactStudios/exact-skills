@@ -2,9 +2,16 @@
 
 Shared by the exact-review skills. The calling skill gives you a **profile**: Arguments, Criteria, Source, Exclusions, Project files, Tools, Map, Extra scope, Cross-slice and Example, plus Extra prep when it has one. Wherever this procedure names a profile field, use the calling skill's value.
 
+## Prerequisite: ponytail
+
+Before anything else, check that ponytail is available: in Claude Code the `ponytail:ponytail` skill; in Cursor a `ponytail` skill or the ponytail ruleset already in your context. If it is missing, stop and ask the user to install it, then run the skill again:
+
+- Claude Code: `/plugin marketplace add DietrichGebert/ponytail`, then `/plugin install ponytail@ponytail`.
+- Cursor: `git clone https://github.com/DietrichGebert/ponytail` and `node ponytail/scripts/cursor-hooks.js install`, or `npx skills add DietrichGebert/ponytail --agent cursor`.
+
 ## Inputs
 
-The profile's Arguments hold the user's input. The first word is `FOLDER`, the second is `TODO_FILE`.
+The profile's Arguments hold the user's input. The first word is `FOLDER`, the second is `TODO_FILE`. If Arguments shows the literal text `$ARGUMENTS`, your agent doesn't substitute it; take both values from the user's message.
 
 If either is missing, ask for it before doing anything else; suggest `TODO-<folder-slug>.md` as the default `TODO_FILE`. Resolve relative paths from the repository root. Confirm `FOLDER` exists and contains Source files. These are the only questions you ask. Once the audit starts, don't stop to ask; record any assumption in the affected task's instructions.
 
@@ -17,8 +24,8 @@ If either is missing, ask for it before doing anything else; suggest `TODO-<fold
 ## 1. Prepare
 
 1. Run `git status --porcelain` and keep the output as the baseline.
-2. Load the `ponytail:ponytail` skill with args `full`. Its ladder governs every Fix. Where it conflicts with this procedure on scope or output format, this procedure wins. If ponytail isn't installed, use the ladder written in the Finding contract.
-3. Read the Criteria file.
+2. Load ponytail at level `full` (Claude Code: the `ponytail:ponytail` skill with args `full`). Its ladder governs every Fix. Where it conflicts with this procedure on scope or output format, this procedure wins.
+3. Read the Criteria file. Resolve its absolute path now; sub-agents need it.
 4. Read `CLAUDE.md`, `.claude/rules/*` and the lint config. Treat project rules as review criteria.
 5. Read the Project files to learn what the profile lists for them.
 6. If the profile has Extra prep, do it.
@@ -34,11 +41,11 @@ Before judging anything, build a short map in your working notes (not in `TODO_F
 
 ## 3. Review
 
-If the in-scope source is at most 25 files and 4,000 lines, review it yourself against the Criteria file. Otherwise split it by subfolder into slices about that size, keeping tightly coupled files together, and dispatch one `general-purpose` sub-agent per slice, at most 8 in parallel, with the Sub-agent brief below. After the slices return, review the profile's Cross-slice concerns yourself.
+If the in-scope source is at most 25 files and 4,000 lines, review it yourself against the Criteria file. Otherwise split it by subfolder into slices about that size, keeping tightly coupled files together, and dispatch one sub-agent per slice (Claude Code: `general-purpose`), at most 8 in parallel, with the Sub-agent brief below. If your agent can't run sub-agents, review the slices one at a time yourself. After the slices return, review the profile's Cross-slice concerns yourself.
 
 ## 4. Verify and consolidate
 
-1. Re-read the code for every Critical and High finding and every Medium-confidence finding from sub-agents. Drop what doesn't hold. With more than 15 findings to check, hand the re-check to `general-purpose` sub-agents in batches, giving each the findings and the Criteria file path.
+1. Re-read the code for every Critical and High finding and every Medium-confidence finding from sub-agents. Drop what doesn't hold. With more than 15 findings to check and sub-agents available, hand the re-check to them in batches, giving each the findings and the Criteria file path.
 2. Merge duplicates. Combine findings only when one change fixes them all; never bundle unrelated issues.
 3. Sort by Severity, then Category.
 
@@ -69,8 +76,8 @@ Bad:
 Fill this in for each slice:
 
 > You are auditing part of a codebase. **Read-only: don't create, edit or delete any file, and don't run fixers or installs.**
-> Load the `ponytail:ponytail` skill with args `full` and use its ladder for every Fix; this brief wins on scope and output format.
-> Read `<Criteria file path>` and apply its Review areas, What not to flag and Finding contract.
+> Load ponytail at level `full` (Claude Code: the `ponytail:ponytail` skill with args `full`) and use its ladder for every Fix; this brief wins on scope and output format.
+> Read `<absolute Criteria file path>` and apply its Review areas, What not to flag and Finding contract.
 > Project rules to apply: <paths to CLAUDE.md and the .claude/rules files>.
 > Context map: <the map items for your files, including their load>.
 > Your files: <list>. Read any other file for context, but report findings only for your files and for <the profile's Extra scope, as it applies to your files>.

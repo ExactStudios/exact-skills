@@ -9,12 +9,12 @@ disable-model-invocation: true
 
 Audit one folder of JavaScript/TypeScript and record verified, actionable findings in a TODO file. Analysis only.
 
-Read `${CLAUDE_PLUGIN_ROOT}/shared/audit-procedure.md` and follow it with this profile.
+Read `../../shared/audit-procedure.md` (relative to this skill's folder) and follow it with this profile.
 
 ## Profile
 
 - **Arguments**: `$ARGUMENTS`
-- **Criteria**: `${CLAUDE_SKILL_DIR}/review-criteria.md`
+- **Criteria**: `review-criteria.md` in this skill's folder
 - **Source**: `.js .jsx .mjs .cjs .ts .tsx`
 - **Exclusions**: build output (directories from the build config and `.gitignore`), minified files, `.d.ts` files, `node_modules`.
 - **Project files**: `package.json`, the build config and the test config, to learn the build output directories, how `@wordpress/*` packages are externalized, the JS test framework, and the lint and type-check scripts.

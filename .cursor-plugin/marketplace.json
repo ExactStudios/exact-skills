@@ -1,0 +1,17 @@
+{
+  "name": "exact-skills",
+  "owner": {
+    "name": "Shakeeb Ahmed"
+  },
+  "metadata": {
+    "description": "Exact code-review skills for WordPress plugin development",
+    "pluginRoot": "plugins"
+  },
+  "plugins": [
+    {
+      "name": "exact-skills",
+      "source": "exact-skills",
+      "description": "Read-only folder audits that record verified findings as Pending tasks in a TODO file"
+    }
+  ]
+}

@@ -9,12 +9,12 @@ disable-model-invocation: true
 
 Audit one folder of WordPress PHP and record verified, actionable findings in a TODO file. Analysis only.
 
-Read `${CLAUDE_PLUGIN_ROOT}/shared/audit-procedure.md` and follow it with this profile.
+Read `../../shared/audit-procedure.md` (relative to this skill's folder) and follow it with this profile.
 
 ## Profile
 
 - **Arguments**: `$ARGUMENTS`
-- **Criteria**: `${CLAUDE_SKILL_DIR}/review-criteria.md`
+- **Criteria**: `review-criteria.md` in this skill's folder
 - **Source**: `.php`, including templates and views.
 - **Exclusions**: `node_modules`, build output, language files, and `index.php` files that only hold a "Silence is golden" comment.
 - **Project files**: `composer.json`, the main plugin file header, the PHPCS, PHPStan and PHPUnit configs, to learn the minimum PHP version ("Requires PHP" or `require.php`), the minimum WordPress version ("Requires at least"), the text domain, the autoloading, the PHP test setup (WordPress test suite, Brain Monkey or WP_Mock), and the lint and static-analysis commands.
