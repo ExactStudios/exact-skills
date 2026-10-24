@@ -18,19 +18,19 @@ If either is missing, ask for it before doing anything else; suggest `TODO-<fold
 ## Hard rules
 
 - Analysis only. The only file you may create or modify is `TODO_FILE`. No edits to source, tests, config or lockfiles; no fixers (`--fix`, `phpcbf`, formatters); no installs; no commits; nothing posted anywhere.
-- Read any file for context, but record findings only for in-scope files in `FOLDER` and for the profile's Extra scope.
+- Read any file for context, but record findings only for in-scope files in `FOLDER`, for the profile's Extra scope, and for build, dependency, lint, test or asset-registration files that are the root cause of a verified issue in `FOLDER`.
 - Every recorded finding meets the Finding contract in the Criteria file. Recording nothing for an area is a valid outcome. Never pad.
 
 ## 1. Prepare
 
-1. Run `git status --porcelain` and keep the output as the baseline.
+1. Run `git status --porcelain --ignored` and keep the output as the baseline (`--ignored` so a gitignored `TODO_FILE` still shows).
 2. Load ponytail at level `full` (Claude Code: the `ponytail:ponytail` skill with args `full`). Its ladder governs every Fix. Where it conflicts with this procedure on scope or output format, this procedure wins.
 3. Read the Criteria file. Resolve its absolute path now; sub-agents need it.
 4. Read `CLAUDE.md`, `.claude/rules/*` and the lint config. Treat project rules as review criteria.
 5. Read the Project files to learn what the profile lists for them.
 6. If the profile has Extra prep, do it.
 7. List the Source files in `FOLDER`. Exclude the profile's Exclusions, vendored or third-party code (`vendor/`, `packages/`) and generated files. Note the excluded paths for the final summary. Test files are read to judge coverage, not reviewed for style.
-8. Run the profile's Tools on `FOLDER` without fixing. Use the output as evidence; group it by rule instead of turning each warning into a row.
+8. Run the profile's Tools on `FOLDER` without fixing. First find the supported command (the project's script, and whether it accepts a path; if not, run it on the project and keep only results for `FOLDER`). Use the output as evidence; group it by rule instead of turning each warning into a row. If a tool doesn't exist or fails (for example, dependencies aren't installed), record it as "not run" or "failed" with the reason, never as clean, and continue the review.
 
 ## 2. Map
 
@@ -86,14 +86,14 @@ Bad:
 
 If the file exists, read it first.
 
-- **Same layout**: put each new task in its category's section (add the section in Category order if it's missing), continue the IDs from the highest existing ID, skip findings already recorded, and leave existing rows untouched. Then recalculate every counter and the summary table from the Status column.
+- **Same layout**: put each new task in its category's section (add the section in Category order if it's missing), continue the IDs from the highest existing ID, and leave existing rows, IDs and statuses untouched. A finding is already recorded when an existing task covers the same code path and the same root cause, whatever its wording; skip it, including when it is a new symptom of that root cause. Only a different root cause or code path is a new task. Then recalculate every counter and the summary table from the Status column.
 - **Other layout**: leave it untouched and add a new part below it in this layout, with `## <today's date>` above its counters and `###` category headings.
 
 Otherwise create the file.
 
 ## 6. Finish
 
-1. Run `git status --porcelain` and compare it with the baseline. Only `TODO_FILE` may differ. If anything else changed, report it; don't try to repair it.
+1. Run `git status --porcelain --ignored` and compare it with the baseline. Only `TODO_FILE` may differ. If anything else changed, report it; don't try to repair it.
 2. Reply with the `TODO_FILE` path, counts by severity, areas reviewed with no findings, excluded paths, assumptions made and the Tools summary. If the folder has security-sensitive code, suggest running `/claude-security` on `FOLDER` for deeper analysis.
 3. Stop. Don't implement anything.
 
@@ -106,5 +106,5 @@ Fill this in for each slice:
 > Read `<absolute Criteria file path>` and apply its Review areas, What not to flag and Finding contract.
 > Project brief: <the project brief>. Don't re-read project config or rule files; read source and handler files as needed.
 > Context map: <the map items for your files, including their load and the server-contract rows with handler `path:line`>.
-> Your files: <list>. Read any other file for context, but report findings only for your files and for <the profile's Extra scope, as it applies to your files>.
+> Your files: <list>. Read any other file for context, but report findings only for your files, for <the profile's Extra scope, as it applies to your files>, and for build, dependency, lint, test or asset-registration files that are the root cause of a verified issue in your files.
 > Return only a markdown table with the columns `Severity | Category | File | Confidence | Instructions`, following the Finding contract, and one line listing the areas with no findings. An empty table is a valid answer.

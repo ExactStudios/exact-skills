@@ -8,7 +8,7 @@ Check what applies; skip what doesn't.
 
 **Security**
 - XSS sinks: `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `insertAdjacentHTML`, jQuery `.html()` and `$(html)`, and `href`/`src` built from data (`javascript:` URLs). Trace whether the value can be user- or server-controlled and whether it is escaped.
-- For each REST/AJAX call, open the PHP handler and check the `permission_callback` or capability check, nonce verification and input sanitization. JS checks are never authoritative.
+- For each REST/AJAX call, open the PHP handler and first establish how it authenticates, then check what that model needs. REST with cookie auth: core verifies the `wp_rest` nonce (sent by `apiFetch`), so check the `permission_callback`. admin-ajax and admin-post: check both a capability check and a nonce check. Always check input sanitization. A nonce is never a permission check, and JS checks are never authoritative.
 - Localized data that exposes more to the browser than the page needs.
 - Third-party or dynamically loaded scripts.
 

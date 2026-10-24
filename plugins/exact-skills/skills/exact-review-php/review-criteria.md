@@ -8,7 +8,7 @@ Check what applies; skip what doesn't.
 
 **Security**
 - Authorization: every admin action, `admin_post_*` handler, AJAX handler (especially `wp_ajax_nopriv_*`), REST route and form handler checks a capability with `current_user_can`. `is_admin()` only says the request is for an admin page; it is not a permission check. A REST `permission_callback` of `__return_true` on a route that reads private data or changes state is a finding.
-- CSRF: every state change verifies a nonce (`check_admin_referer`, `check_ajax_referer`, `wp_verify_nonce`).
+- CSRF: establish how each handler authenticates first. admin-ajax, admin-post and form handlers verify a nonce on every state change (`check_admin_referer`, `check_ajax_referer`, `wp_verify_nonce`). REST routes with cookie auth get the `wp_rest` nonce checked by core, so a missing nonce in the callback is not a finding there. A nonce is never a permission check: it must come with the capability check above.
 - Input: superglobals are `wp_unslash`ed, then sanitized with the function that matches the type (`sanitize_text_field`, `absint`, `sanitize_key`, `esc_url_raw` and so on). `register_setting` and REST args have a sanitize or validate callback.
 - Output: escaped late, where it is printed, with the function that matches the context (`esc_html`, `esc_attr`, `esc_url`, `esc_js`, `wp_kses_post`), including templates and translated strings (`esc_html__`).
 - SQL: all dynamic SQL goes through `$wpdb->prepare()`, including `LIKE` with `$wpdb->esc_like()` and `IN` lists built from placeholders. Table and column names come from a fixed list.
