@@ -13,7 +13,7 @@ A Claude Code plugin marketplace with code-review skills for WordPress plugin de
 Add the marketplace once:
 
 ```bash
-claude plugin marketplace add <owner>/exact-skills
+claude plugin marketplace add ExactStudios/exact-skills
 ```
 
 Install for yourself, in every project:
