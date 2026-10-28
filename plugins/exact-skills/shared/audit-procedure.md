@@ -81,16 +81,15 @@ Layout:
 
 Done: <done> / <count>
 
-| ID | Severity | File | Confidence | Status | Instructions |
-|----|----------|------|------------|--------|--------------|
+| ID | Severity | Confidence | Status | Instructions |
+|----|----------|------------|--------|--------------|
 ```
 
 - **Sections**: one `## <Category>` section per category that has tasks, in the Criteria file's Category order; skip empty categories. The summary table has one row per section, in the same order.
 - **Counters**: `done` counts rows whose Status is `Done`. Keep the counter on its own line under the heading, never in the heading, so section links stay stable.
 - **ID**: `TASK-001`, `TASK-002`, and so on, numbered across the whole file in section order.
-- **File**: `path:line`, comma-separated when there are several.
 - **Status**: `Pending` for every new task.
-- **Instructions**: a single line with `|` escaped as `\|`. Say what is wrong, why it matters (the failure scenario), what to change, what must not change, and how to verify it, specifically enough that someone can implement it without auditing again. The profile's Example shows the level of detail.
+- **Instructions**: the file first, as `path:line` (comma-separated when there are several), then `<br><br>` for an empty line, then the instructions. Keep the cell on a single source line with `|` escaped as `\|`. Say what is wrong, why it matters (the failure scenario), what to change, what must not change, and how to verify it, specifically enough that someone can implement it without auditing again. The profile's Example shows the level of detail.
 
 Bad:
 
