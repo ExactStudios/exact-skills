@@ -1,0 +1,8 @@
+{
+  "name": "wp-core-reference",
+  "description": "Look up WordPress core functions, classes and hooks in the project's Composer stubs before writing code",
+  "author": {
+    "name": "Shakeeb Ahmed"
+  },
+  "license": "MIT"
+}

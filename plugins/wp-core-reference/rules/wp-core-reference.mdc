@@ -1,0 +1,8 @@
+---
+description: Use the wp-core-reference skill before writing WordPress plugin or theme code
+alwaysApply: true
+---
+
+# WordPress core reference
+
+For any WordPress plugin or theme code, always use the wp-core-reference skill first, before writing code.
