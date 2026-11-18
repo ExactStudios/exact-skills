@@ -15,8 +15,4 @@ Plugin Check sends each warning to the prompt whose code its full sniff code sta
 | `PluginCheck.CodeAnalysis.PluginUpdater` | `plugin-updater.md` | WP.org 8: Executable code from third parties |
 | any other code | `generic.md` | the category the warning is about |
 
-`naming.md` has no sniff code: apply it to the plugin's name, slug and description under WP.org 17, 9 and 12. Plugin Check's similar-name prompt (a web search for plugins and trademarks with similar names) is left out on purpose; this skill sends nothing about the plugin to outside services.
-
-A warning these rules show to be a false positive is not a TODO row. List it in the final reply with the rule that dismissed it.
-
-If Plugin Check is installed next to the audited plugin, its original prompts are in `wp-content/plugins/plugin-check/prompts/`. Read them, apply the stricter rule where they differ from these files, and report the difference.
+`naming.md` has no sniff code; WP.org 17, 9 and 12 in the criteria point to it.

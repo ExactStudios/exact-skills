@@ -29,8 +29,6 @@ Check at guideline level, using the Plugin Check rule files for what is and isn'
 - SQL with variable data that isn't prepared (`plugin-check/direct-db-queries.md`).
 - `register_setting()` without a sanitize callback (`plugin-check/setting-sanitization.md`).
 
-Put this in the final reply: "For full security coverage, run `/exact-skills:exact-review-php` on this folder."
-
 ### WP.org 1: GPL license
 
 Default: High. "All code, data, and images ... must comply with the GPL or a GPL-Compatible license", including bundled third-party libraries, images and fonts.
@@ -57,10 +55,9 @@ Default: High. Developers must confirm "the licensing of all included files" and
 
 Default: High; Critical when the hidden code does something the readable code doesn't (remote calls, `eval`, file writes).
 
-- Obfuscation: packer-style `eval(function(p,a,c,k,e,...`, `eval(base64_decode(...))`, `gzinflate`/`str_rot13` chains, ionCube or other encoders, mangled names such as `$z12sdf813d`.
+- Obfuscated code, as defined in `plugin-check/code-obfuscation.md`, plus ionCube or other encoders, `gzinflate` chains and unclear names such as `$z12sdf813d`.
 - Minified or bundled JS and CSS are fine only when the readable source and build tools ship in the plugin or the readme links the public development repository. Flag shipped `*.min.js`, `build/` or `dist/` output with neither.
 - Recommended, Low: document how to run the build tools.
-- What counts as obfuscation, and what doesn't (minified code, base64 data, encoded config values): `plugin-check/code-obfuscation.md`. Any `eval()` is flagged.
 
 ### WP.org 5: Trialware
 
@@ -96,7 +93,7 @@ Default: Critical. Plugins "may not contact external servers without explicit an
 
 Default: Critical for updates or installs from elsewhere; High for the rest. Loading code from documented services is allowed, but "all communication must be made as securely as possible".
 
-- Updates or installs of plugins, themes or add-ons from any server other than WP.org: update checkers, filters on `pre_set_site_transient_update_plugins`, `site_transient_update_plugins` or `plugins_api`, `Plugin_Upgrader` or `WP_Upgrader` fed a non-WP.org URL, or bundled update-checker libraries. What is and isn't an updater: `plugin-check/plugin-updater.md`.
+- Updates or installs of plugins, themes or add-ons from any server other than WP.org: a custom updater as defined in `plugin-check/plugin-updater.md`, a `plugins_api` filter, or `Plugin_Upgrader` or `WP_Upgrader` fed a non-WP.org URL.
 - Installing a premium version of the same plugin.
 - JS or CSS from a third-party CDN. "All non-service related JavaScript and CSS must be included locally"; fonts are the one exception.
 - Regularly updated lists fetched from a third party whose terms don't allow it.
@@ -113,7 +110,6 @@ Default: High; Critical for using the user's server or resources without permiss
 - Descriptions that claim the plugin is better than others, the best, the first or the only solution ("#1 plugin for…", "the only plugin for…"). Default Medium. Rules: the description section of `plugin-check/naming.md`.
 - Offers to drive traffic to sites that use the plugin.
 - Prompts that pressure or reward users for reviews.
-- Readme keyword stuffing or black-hat SEO (also WP.org 12).
 - Conduct items (fake reviews, harassment, code-of-conduct violations, disguised identities) can't be seen in code; leave them out.
 
 ### WP.org 10: Credits and links on the public site
@@ -134,14 +130,13 @@ Default: Medium.
 - Error messages that don't say how to fix the problem, or don't go away once it is fixed.
 - Advertising in the dashboard: "should be avoided". Referral tracking in those ads also breaks WP.org 7.
 - Fine: links to the developer's own site or social networks, and images bundled in the plugin.
-- When the target includes `com`, file dashboard ads and upsells under WP.com: WordPress.com experience instead.
 
 ### WP.org 12: Readme spam
 
 Default: Medium. "Readmes are to be written for people, not bots."
 
 - More than 5 tags; tags naming competitors (related products are fine, so a WooCommerce extension may use `woocommerce`); tags unique to the plugin, which aren't shown.
-- The same term repeated to stuff keywords, in the plugin name, the readme or translation files.
+- Keyword stuffing or black-hat SEO: the same term repeated in the plugin name, the readme or translation files.
 - Affiliate links that aren't disclosed, or that go through a redirect or cloaked URL.
 - Links to products the plugin doesn't need, beyond a moderate number.
 
@@ -166,16 +161,12 @@ Default: Medium. "Users are only alerted to updates when the plugin version is i
 
 ### WP.org 17: Trademarks and project names
 
-Default: High. Apply the name rules in `plugin-check/naming.md` to the display name (plugin header and readme), the slug and the owner. In short:
+Default: High. The use of a trademark or another project as "the sole or initial term of a plugin slug is prohibited" unless the author owns it; "Dancing Sloths for Superbox" is fine, "Superbox Dancing Sloths" is not.
 
-- The slug (folder name), plugin name or block namespace begins with another product's trademark or project name ("wordpress", "woocommerce", "woo", a third-party brand) and nothing shows the author owns it. "Dancing Sloths for Superbox" is fine; "Superbox Dancing Sloths" is not.
-- A trademark the author doesn't own appears anywhere in the name without a phrase that shows no affiliation ("for", "with", "-"), or as a portmanteau such as a name ending in "-Press".
-- A banned or discouraged term appears anywhere in the name or slug, even after "for" or "with": Facebook, WhatsApp, Instagram, Threads, Oculus, "WordPress", "WP" as a word, Trustpilot, Binance Pay; "plugin" when redundant, superlatives, "free", Gutenberg. Variants are listed in `naming.md`.
-- The name is too generic, unrelated to what the plugin does, or stuffed with keywords. Default Medium.
-- The slug is longer than 50 characters.
-- "WordPress" in a domain the plugin uses for itself, or "WP" used in a way that suggests the plugin is official. WordPress Foundation word marks: WordPress, WordCamp, BuddyPress, Openverse, WP-CLI.
+- The display name (plugin header and readme), slug and owner: apply `plugin-check/naming.md`, including its severities and its suggested-name fix.
+- A block namespace that begins with another product's trademark.
+- "WordPress" in a domain the plugin uses for itself. WordPress Foundation word marks: WordPress, WordCamp, BuddyPress, Openverse, WP-CLI.
 - Prefer original branding; no finding for that alone.
-- The Fix suggests a compliant display name, and a slug when the slug has the same issue, following `naming.md`.
 
 ### WP.org Block Directory
 
@@ -196,7 +187,6 @@ Default: Low. A plugin should "adhere to all WordPress plugin coding standards, 
 - Globally accessible names not prefixed: functions and classes, interfaces and traits (unless namespaced), namespaces, global variables, options, transients, custom hook names. The prefix should be unique, at least 4 letters (5 recommended), not a common English word, and not `__`, `_`, `wp_` or `WordPress`. A WooCommerce extension also avoids `woo` and `WooCommerce` prefixes.
 - `function_exists()` or `class_exists()` wrapped around the plugin's own functions and classes; that's for shared libraries only.
 - Files other than the main plugin file and `uninstall.php` sitting at the plugin root when they could live in subfolders.
-- `is_admin()` used as if it were a permission check (also WP.com: Implement nonces).
 
 ### WP.com: WordPress.com experience
 
@@ -224,12 +214,11 @@ Default: Low.
 
 - User-facing strings that aren't in English, or that aren't wrapped in gettext.
 - Variables interpolated inside translated strings; placeholders without a `translators:` comment; several placeholders without argument numbers (`%1$s`); plurals without `_n()`; sentences built by concatenating translated fragments; empty strings or `\r` in translated strings.
-- Translated strings printed into HTML or attributes without the matching escaping function (`esc_html__`, `esc_attr__` and so on).
 - A plugin aimed at a specific market without translation files for that market.
 
 ### WP.com: Follow WordPress PHP guidelines
 
-Default: Low. The WordPress PHP coding standards (quotes, indentation, brace style, no shorthand PHP tags, Yoda conditions, naming). Leave them to PHPCS and group its output by rule; record only what PHPCS reports or can't run.
+No rows. The WordPress PHP coding standards (quotes, indentation, brace style, no shorthand PHP tags, Yoda conditions, naming) are PHPCS's job; its output goes in the Tools summary, grouped by rule.
 
 ### WP.com: Add Settings action link
 
@@ -244,7 +233,7 @@ Default: Low; Medium when the choice costs something real.
 
 ### WP.com: Prevent data leaks
 
-Default: Low. The WP.com guideline asks for `if ( ! defined( 'ABSPATH' ) ) { exit; }` after the opening tag of every PHP file. The WP.org best-practices page limits it to files that run code outside class or function definitions. Flag those files under both targets; flag the rest only when the target includes `com`.
+The WP.com guideline asks for `if ( ! defined( 'ABSPATH' ) ) { exit; }` after the opening tag of every PHP file. Default Medium for a file without it that runs code outside class or function definitions (the case the best-practices page it links names); Low for other PHP files.
 
 ### WP.com: Readme
 
@@ -259,7 +248,6 @@ Default: Low. Products on WordPress.com include `Author` and `Developer` headers
 Default: Low.
 
 - Settings forms or front-end output that other plugins can't change without editing the code, where an action or filter is the obvious fit. Record only with a concrete case.
-- Custom hooks not prefixed (also WP.com: Coding standards and best practices).
 - A plugin with blocks suited to layouts but no block patterns. Record only when the case is clear.
 
 ### WP.com: Remove unused code
@@ -336,8 +324,6 @@ Default: per the security rules of `exact-review-php`. The page asks developers 
 - Output printed without late escaping: `plugin-check/late-escaping.md`.
 - SQL with variable data that isn't prepared: `plugin-check/direct-db-queries.md`.
 
-Put this in the final reply: "For full security coverage, run `/exact-skills:exact-review-php` on this folder."
-
 ### WP.com: Version management
 
 Default: Low. The plugin version is a dotted number (WP.com points to WordPress's version numbering), and the versions in the plugin agree (see WP.org 15).
@@ -358,7 +344,6 @@ Don't record these as tasks. List them in the final reply as not checked:
 - `global $post; ... setup_postdata(); ... wp_reset_postdata();` and other patterns core documents for globals.
 - Style or formatting that PHPCS governs.
 - Security, performance and correctness issues beyond the guideline-level checks in WP.org Developer Expectations: Security and WP.com: Implement nonces, Data validation, Minimize security risks and Optimize custom Query; those belong to `exact-review-php` and `exact-review-js`.
-- Plugin Check or PHPCS warnings that the matching file in `plugin-check/` shows to be false positives. List them in the final reply instead.
 - Files that the deploy config (`.distignore`, `export-ignore` in `.gitattributes`, the build or zip script) keeps out of the shipped package, except as evidence for WP.org 4 (source availability).
 - Anything in the excluded paths.
 - Code marked with a `shortcut:` or `ponytail:` comment that names its limit; that is a decision, unless the real load already crosses the limit.
@@ -380,5 +365,5 @@ Every finding has:
 - **Fix**: the smallest change that complies, chosen with the ponytail ladder: does it need to exist → already in the codebase → PHP or WordPress core → installed dependency → one line → minimum code. Keep behaviour and public APIs, including fired hooks, unless the behaviour itself is the breach.
 - **Fix check**: the fix works on the minimum WordPress and PHP versions, and doesn't break another guideline (for example, moving a CDN script local must keep its license).
 - **Severity in context**: if the guideline itself carves out the case (a service plugin, a developer tool reviewed case by case), lower the severity or drop the finding, and say why.
-- **Both targets**: when one finding breaks a guideline of each target, record it once, under the category with the higher severity, and name the other guideline in the Instructions.
+- **More than one category**: when one finding fits several categories (in one target or across both), record it once, under the category with the higher severity; on a tie, under the more specific one. Name the other guidelines it breaks in the Instructions.
 - **Category**: one of the `###` headings above, exactly as written.
