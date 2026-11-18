@@ -1,6 +1,6 @@
 # Review criteria
 
-Shared by the main agent and every slice sub-agent.
+Shared by the main agent and every slice sub-agent. Some false-positive rules under Security follow Plugin Check 2.2.0's review prompts.
 
 ## Review areas
 
@@ -8,10 +8,10 @@ Check what applies; skip what doesn't.
 
 **Security**
 - Authorization: every operation that needs privileges (admin actions, `admin_post_*`, AJAX and form handlers, REST routes) checks a capability with `current_user_can` or the project's capability helper. Public endpoints (`wp_ajax_nopriv_*`, a REST `permission_callback` of `__return_true`) are fine when their behavior and data are meant to be public; flag them when they expose protected data or let a visitor or lower-privileged user change state they shouldn't. `is_admin()` only says the request is for an admin page; it is not a permission check.
-- CSRF: establish how each handler authenticates first. admin-ajax, admin-post and form handlers verify a nonce on every state change (`check_admin_referer`, `check_ajax_referer`, `wp_verify_nonce`). REST routes with cookie auth get the `wp_rest` nonce checked by core, so a missing nonce in the callback is not a finding there. A nonce is never a permission check: it must come with the capability check above.
-- Input: superglobals are `wp_unslash`ed, then sanitized with the function that matches the type (`sanitize_text_field`, `absint`, `sanitize_key`, `esc_url_raw` and so on). `register_setting` and REST args have a sanitize or validate callback.
-- Output: escaped late, where it is printed, with the function that matches the context (`esc_html`, `esc_attr`, `esc_url`, `esc_js`, `wp_kses_post`), including templates and translated strings (`esc_html__`).
-- SQL: all dynamic SQL goes through `$wpdb->prepare()`, including `LIKE` with `$wpdb->esc_like()` and `IN` lists built from placeholders. Table and column names come from a fixed list.
+- CSRF: establish how each handler authenticates first. admin-ajax, admin-post and form handlers verify a nonce on every state change (`check_admin_referer`, `check_ajax_referer`, `wp_verify_nonce`). REST routes with cookie auth get the `wp_rest` nonce checked by core, so a missing nonce in the callback is not a finding there; neither is a REST callback with a proper `permission_callback`. A nonce verified earlier in the same function or in its caller counts. Input read only to display something, not to process or save it, can go without a nonce; say why. A nonce is never a permission check: it must come with the capability check above, and a capability check alone is not enough for a form submission.
+- Input: superglobals are `wp_unslash`ed, then sanitized with the function that matches the type (`sanitize_text_field`, `absint`, `sanitize_key`, `esc_url_raw` and so on). `register_setting` and REST args have a sanitize or validate callback (a `sanitize_option_{$option}` filter also counts). `isset()`, `empty()` and `wp_unslash()` don't sanitize; a type cast does, for its type. Don't flag unsanitized passwords, tokens, secrets, signatures or API keys (judge by the key name and the use): sanitizing changes them, and they are fine when only hashed (`wp_hash_password`) or compared (`wp_check_password`, `hash_equals`) and never printed or put into unprepared SQL.
+- Output: escaped late, where it is printed, with the function that matches the context (`esc_html`, `esc_attr`, `esc_url`, `esc_js`, `wp_kses_post`), including templates and translated strings (`esc_html__`). A value escaped into a variable and printed later is not escaped late; `__()`, `_e()`, `printf()` and `sprintf()` don't escape. Core functions that escape their own markup (`get_avatar`, `paginate_links`, `wp_nonce_field`) need no extra escaping.
+- SQL: all dynamic SQL goes through `$wpdb->prepare()`, including `LIKE` with `$wpdb->esc_like()` and `IN` lists built from placeholders. Table and column names come from a fixed list; table names built from `$wpdb->prefix` or core properties such as `$wpdb->posts` are fine. Queries with only hard-coded values, and `$wpdb->insert`, `update`, `delete` and `replace` called with format arguments, need no `prepare()`.
 - Object injection: `unserialize` or `maybe_unserialize` on data a user can control.
 - Redirects and requests: `wp_redirect` with user input instead of `wp_safe_redirect`; `wp_remote_*` with a user-supplied URL instead of `wp_safe_remote_*`.
 - Files: path traversal in includes and file operations; uploads that skip `wp_handle_upload` or `wp_check_filetype_and_ext`.
