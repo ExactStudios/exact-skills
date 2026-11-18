@@ -8,9 +8,10 @@ A Claude Code and Cursor plugin marketplace with code-review skills for WordPres
 |-------|-------------|--------|--------------|
 | Exact Review JS | `/exact-skills:exact-review-js <folder> <todo-file>` | `/exact-review-js <folder> <todo-file>` | Read-only audit of the JS/JSX/TS/TSX code in one folder. Records verified findings as Pending tasks in a TODO file. |
 | Exact Review PHP | `/exact-skills:exact-review-php <folder> <todo-file>` | `/exact-review-php <folder> <todo-file>` | Read-only audit of the WordPress PHP code in one folder. Records verified findings as Pending tasks in a TODO file. |
+| Exact Review WordPress | `/exact-skills:exact-review-wordpress <folder> <todo-file> [org\|com\|both]` | `/exact-review-wordpress <folder> <todo-file> [org\|com\|both]` | Read-only audit of one plugin folder against the WordPress.org plugin guidelines, the WordPress.com marketplace guidelines, or both (default). Records verified findings as Pending tasks in a TODO file, grouped by the guideline they break. |
 | WP Core Reference | `/wp-core-reference:wp-core-reference` | `/wp-core-reference` | Looks up WordPress core functions, classes and hooks in the project's Composer stubs before writing code, so nothing is invented or deprecated. A separate plugin. |
 
-Both review skills follow the same steps from `plugins/exact-skills/shared/audit-procedure.md`; each skill keeps its own review criteria.
+All three review skills follow the same steps from `plugins/exact-skills/shared/audit-procedure.md`; each skill keeps its own review criteria.
 
 ## Prerequisite: ponytail
 

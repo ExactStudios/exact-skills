@@ -1,6 +1,6 @@
 # Audit procedure
 
-Shared by the exact-review skills. The calling skill gives you a **profile**: Arguments, Criteria, Source, Exclusions, Project files, Tools, Map, Extra scope, Cross-slice, Lenses and Example, plus Extra prep when it has one. Wherever this procedure names a profile field, use the calling skill's value.
+Shared by the exact-review skills. The calling skill gives you a **profile**: Arguments, Criteria, Source, Exclusions, Project files, Tools, Map, Extra scope, Cross-slice, Lenses and Example, plus Extra prep and Extra report when it has them. Wherever this procedure names a profile field, use the calling skill's value.
 
 ## Prerequisite: ponytail
 
@@ -11,7 +11,7 @@ Before anything else, check that ponytail is available: in Claude Code the `pony
 
 ## Inputs
 
-The profile's Arguments hold the user's input. The first word is `FOLDER`, the second is `TODO_FILE`. If Arguments shows the literal text `$ARGUMENTS`, your agent doesn't substitute it; take both values from the user's message.
+The profile's Arguments hold the user's input. The first word is `FOLDER`, the second is `TODO_FILE`; any further words are the optional arguments the profile's Arguments field describes. If Arguments shows the literal text `$ARGUMENTS`, your agent doesn't substitute it; take both values from the user's message.
 
 If either is missing, ask for it before doing anything else; suggest `TODO-<folder-slug>.md` as the default `TODO_FILE`. Resolve relative paths from the repository root. Confirm `FOLDER` exists and contains Source files. These are the only questions you ask. Once the audit starts, don't stop to ask; record any assumption in the affected task's instructions.
 
@@ -29,7 +29,7 @@ If either is missing, ask for it before doing anything else; suggest `TODO-<fold
 4. Read `CLAUDE.md`, `.claude/rules/*` and the lint config. Treat project rules as review criteria.
 5. Read the Project files to learn what the profile lists for them.
 6. If the profile has Extra prep, do it.
-7. List the Source files in `FOLDER`. Exclude the profile's Exclusions, vendored or third-party code (`vendor/`, `packages/`) and generated files. Note the excluded paths for the final summary. Test files are read to judge coverage, not reviewed for style.
+7. List the Source files in `FOLDER`. Exclude the profile's Exclusions and, unless the profile's Source includes them, vendored or third-party code (`vendor/`, `packages/`) and generated files. Note the excluded paths for the final summary. Test files are read to judge coverage, not reviewed for style.
 8. Find earlier audit files that cover `FOLDER` (`TODO*.md`, `*audit*.md`, review notes that mention `FOLDER` paths), other than `TODO_FILE`. Keep their rows as candidates and re-check each one in §4 like any other finding. Never copy a row without re-checking it.
 9. Run the profile's Tools on `FOLDER` without fixing. First find the supported command (the project's script, and whether it accepts a path; if not, run it on the project and keep only results for `FOLDER`). Use the output as evidence; group it by rule instead of turning each warning into a row. If a tool doesn't exist or fails (for example, dependencies aren't installed), record it as "not run" or "failed" with the reason, never as clean, and continue the review.
 
@@ -105,7 +105,7 @@ Otherwise create the file.
 ## 6. Finish
 
 1. Run `git status --porcelain --ignored` and compare it with the baseline. Only `TODO_FILE` may differ. If anything else changed, report it; don't try to repair it.
-2. Reply with the `TODO_FILE` path, counts by severity, areas reviewed with no findings, excluded paths, assumptions made, the Tools summary, prior-audit candidates confirmed, corrected and refuted (with reasons), and the coverage gaps the sub-agents reported. If the folder has security-sensitive code, suggest running `/claude-security` on `FOLDER` for deeper analysis.
+2. Reply with the `TODO_FILE` path, counts by severity, areas reviewed with no findings, excluded paths, assumptions made, the Tools summary, prior-audit candidates confirmed, corrected and refuted (with reasons), the coverage gaps the sub-agents reported, and the profile's Extra report if it has one. If the folder has security-sensitive code, suggest running `/claude-security` on `FOLDER` for deeper analysis.
 3. Stop. Don't implement anything.
 
 ## Slice brief
