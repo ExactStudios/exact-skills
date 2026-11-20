@@ -3,6 +3,9 @@ name: exact-review-wordpress
 description: Use when the user asks for a read-only audit of one WordPress plugin folder against the WordPress.org plugin guidelines, the WordPress.com marketplace plugin guidelines, or both, with the findings recorded as Pending tasks in a TODO markdown file.
 argument-hint: "<folder> <todo-file> [org|com|both]"
 disable-model-invocation: true
+metadata:
+  author: Shakeeb Ahmed
+  tags: [code-review, wordpress, plugin-guidelines, audit]
 ---
 
 # Exact Review WordPress

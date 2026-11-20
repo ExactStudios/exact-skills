@@ -3,6 +3,9 @@ name: exact-review-php
 description: Use when the user asks for a read-only audit of the PHP code in one WordPress plugin or theme folder, with the findings recorded as Pending tasks in a TODO markdown file.
 argument-hint: "<folder> <todo-file>"
 disable-model-invocation: true
+metadata:
+  author: Shakeeb Ahmed
+  tags: [code-review, php, wordpress, audit]
 ---
 
 # Exact Review PHP

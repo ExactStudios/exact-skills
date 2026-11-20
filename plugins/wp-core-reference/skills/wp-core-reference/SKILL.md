@@ -1,6 +1,9 @@
 ---
 name: wp-core-reference
 description: MUST be used before writing, editing or suggesting any WordPress plugin or theme code. Look up every core function, class, action and filter in the installed stubs first, so nothing is invented or deprecated.
+metadata:
+  author: Shakeeb Ahmed
+  tags: [wordpress, php, reference]
 ---
 
 # WordPress core reference
