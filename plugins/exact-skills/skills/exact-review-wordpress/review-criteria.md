@@ -48,7 +48,7 @@ Default: High. "All code, data, and images ... must comply with the GPL or a GPL
 Default: High. Developers must confirm "the licensing of all included files" and "comply to the terms of use for all third party services and APIs". "If there is no way to validate the licensing of a library or the terms of an API, then they cannot be used."
 
 - A bundled file with no license or source anywhere (no header, no manifest entry, no upstream link).
-- A third-party API called with no terms of use you can name. Report what is missing; don't judge the terms.
+- A third-party API called with no terms of use you can name. Report what is missing; whether the terms are fair is out of scope.
 - Code that restores something WP.org asked to remove is out of reach; skip it.
 
 ### WP.org 4: Human-readable code
